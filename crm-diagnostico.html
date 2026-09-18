@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CRM Diagnóstico — DashiTecnology</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+  <style>
+    :root,
+    [data-theme="light"] {
+      --navy: #002B8F;
+      --royal: #0D47C9;
+      --electric: #2563EB;
+      --orange: #FF5A00;
+      --orange-soft: #FF7A1A;
+      --off-white: #F4F4F4;
+      --dark: #1E1E1E;
+      --muted: rgba(30, 30, 30, 0.62);
+      --line: rgba(0, 43, 143, 0.12);
+      --surface: rgba(255, 255, 255, 0.86);
+      --bg-grad-1: rgba(37, 99, 235, 0.18);
+      --bg-grad-2: rgba(255, 90, 0, 0.10);
+      --bg-base: linear-gradient(160deg, #EEF2FF 0%, #F4F4F4 42%, #F7F8FB 100%);
+      --grid-line: rgba(0, 43, 143, 0.04);
+      --heading: #002B8F;
+      --ok: #0F7B4A;
+      --ok-bg: rgba(15, 123, 74, 0.1);
+      --warn: #B45309;
+      --warn-bg: rgba(180, 83, 9, 0.1);
+      --bad: #B42318;
+      --bad-bg: rgba(180, 35, 24, 0.08);
+      --shadow-soft: 0 12px 40px rgba(0, 43, 143, 0.08);
+      --choice-hover: rgba(0, 43, 143, 0.05);
+      --choice-on: rgba(255, 90, 0, 0.12);
+    }
+
+    [data-theme="dark"] {
+      --navy: #7BA3FF;
+      --royal: #5B8CFF;
+      --electric: #2563EB;
+      --orange: #FF5A00;
+      --orange-soft: #FF7A1A;
+      --off-white: #12141A;
+      --dark: #F4F4F4;
+      --muted: rgba(244, 244, 244, 0.62);
+      --line: rgba(123, 163, 255, 0.18);
+      --surface: rgba(26, 29, 38, 0.9);
+      --bg-grad-1: rgba(37, 99, 235, 0.22);
+      --bg-grad-2: rgba(255, 90, 0, 0.12);
+      --bg-base: linear-gradient(160deg, #0E1118 0%, #12141A 45%, #161A24 100%);
+      --grid-line: rgba(123, 163, 255, 0.06);
+      --heading: #E8EEFF;
+      --ok: #34D399;
+      --ok-bg: rgba(52, 211, 153, 0.12);
+      --warn: #FBBF24;
+      --warn-bg: rgba(251, 191, 36, 0.12);
+      --bad: #F87171;
+      --bad-bg: rgba(248, 113, 113, 0.12);
+      --shadow-soft: 0 12px 40px rgba(0, 0, 0, 0.35);
+      --choice-hover: rgba(123, 163, 255, 0.08);
+      --choice-on: rgba(255, 90, 0, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      background: var(--off-white);
+      color: var(--dark);
+      font-family: "Outfit", sans-serif;
+      line-height: 1.55;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 50% at 0% 0%, var(--bg-grad-1), transparent 55%),
+        radial-gradient(ellipse 55% 45% at 100% 100%, var(--bg-grad-2), transparent 50%),
+        var(--bg-base);
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.35;
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 1.25rem 1.25rem 3rem;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3 {
+      font-family: "Chakra Petch", sans-serif;
+      color: var(--heading);
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+    h1 { font-size: clamp(1.5rem, 3vw, 2rem); }
+    h2 { font-size: 1.25rem; margin-bottom: 0.65rem; }
+    h3 { font-size: 1.02rem; margin-bottom: 0.45rem; }
+
+    .kicker {
+      display: inline-flex;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 0.55rem;
+    }
+
+    .label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.35rem;
+      color: var(--orange);
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.15rem;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      min-width: 0;
+    }
+    .brand img { height: 48px; width: auto; display: block; }
+    .brand-name {
+      font-family: "Chakra Petch", sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--heading);
+    }
+    .brand-tag { font-size: 0.72rem; font-weight: 600; color: var(--muted); }
+
+    .toolbar-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+
+    button, .btn {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--heading);
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .primary {
+      background: var(--orange);
+      border-color: transparent;
+      color: #fff;
+      font-size: 0.95rem;
+      padding: 0.7rem 1.2rem;
+    }
+    .primary:hover { background: var(--orange-soft); }
+    .ghost { background: transparent; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 1.15rem 1.2rem;
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(10px);
+    }
+
+    .field, .select, .textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--dark);
+      font-family: inherit;
+      font-size: 1rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 12px;
+    }
+    .textarea { min-height: 120px; resize: vertical; }
+    .field:focus, .select:focus, .textarea:focus {
+      outline: 2px solid var(--orange);
+      outline-offset: 1px;
+    }
+    .field-label {
+      display: block;
+      margin: 0.85rem 0 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .login-shell {
+      min-height: calc(100vh - 6rem);
+      display: grid;
+      place-items: center;
+    }
+    .login-card { width: min(100%, 420px); }
+    .login-card h1 { margin-bottom: 0.45rem; }
+    .login-card .lede { color: var(--muted); margin-bottom: 1rem; }
+    .login-error { color: var(--bad); font-size: 0.9rem; min-height: 1.2em; margin-top: 0.75rem; }
+    .login-actions { margin-top: 1.1rem; display: flex; justify-content: flex-end; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 1rem;
+      align-items: start;
+    }
+    @media (max-width: 920px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    .filters { display: grid; gap: 0.55rem; margin-bottom: 0.85rem; }
+    .filters-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+
+    .case-list { display: grid; gap: 0.55rem; max-height: calc(100vh - 220px); overflow: auto; padding-right: 0.15rem; }
+    .case-item {
+      text-align: left;
+      width: 100%;
+      border: 1px solid var(--line);
+      background: transparent;
+      border-radius: 14px;
+      padding: 0.85rem 0.95rem;
+      cursor: pointer;
+      color: inherit;
+      font: inherit;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .case-item:hover { background: var(--choice-hover); }
+    .case-item.active {
+      border-color: var(--orange);
+      background: var(--choice-on);
+    }
+    .case-item .empresa {
+      font-family: "Chakra Petch", sans-serif;
+      font-weight: 700;
+      color: var(--heading);
+      font-size: 0.98rem;
+    }
+    .case-item .meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 0.18rem 0.45rem;
+      border-radius: 999px;
+      background: var(--choice-hover);
+      color: var(--heading);
+      white-space: nowrap;
+    }
+    .badge.novo { background: rgba(37, 99, 235, 0.12); color: var(--royal); }
+    .badge.em_analise { background: var(--warn-bg); color: var(--warn); }
+    .badge.qualificado { background: var(--ok-bg); color: var(--ok); }
+    .badge.em_contato { background: rgba(255, 90, 0, 0.12); color: var(--orange); }
+    .badge.piloto { background: var(--ok-bg); color: var(--ok); }
+    .badge.descartado { background: var(--bad-bg); color: var(--bad); }
+
+    .detail-empty {
+      min-height: 420px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .detail-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .detail-head .lede { color: var(--muted); max-width: 40rem; margin-top: 0.35rem; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem;
+    }
+    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .insight-list { list-style: none; }
+    .insight-list li {
+      padding: 0.45rem 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.95rem;
+    }
+    .insight-list li:last-child { border-bottom: none; }
+    .insight-list strong { color: var(--heading); }
+
+    .signal {
+      border-left: 4px solid var(--orange);
+      margin-top: 0.85rem;
+    }
+    .signal.high { border-left-color: var(--bad); }
+    .signal.mid { border-left-color: var(--warn); }
+    .signal.low { border-left-color: var(--ok); }
+
+    .treat-bar {
+      display: grid;
+      grid-template-columns: 220px 1fr auto;
+      gap: 0.65rem;
+      align-items: end;
+      margin-top: 1rem;
+    }
+    @media (max-width: 720px) {
+      .treat-bar { grid-template-columns: 1fr; }
+    }
+
+    .save-note { font-size: 0.82rem; color: var(--ok); min-height: 1.2em; margin-top: 0.45rem; }
+    .muted { color: var(--muted); font-size: 0.88rem; }
+    .stats {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.85rem;
+    }
+    .stat {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.25rem 0.65rem;
+    }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="toolbar">
+      <div class="brand">
+        <img src="LOGO-Dashi-tecnology-instagram-1-3-removebg-preview.png" alt="Logo DashiTecnology" />
+        <div>
+          <div class="brand-name">DashiTecnology</div>
+          <div class="brand-tag">CRM · Diagnóstico de jornada</div>
+        </div>
+      </div>
+      <div class="toolbar-actions">
+        <span class="muted" id="userEmail" hidden></span>
+        <button type="button" id="themeBtn" aria-label="Alternar tema">Tema</button>
+        <button type="button" class="ghost" id="logoutBtn" hidden>Sair</button>
+      </div>
+    </header>
+
+    <section id="loginView" class="login-shell">
+      <div class="card login-card">
+        <div class="kicker">Acesso interno</div>
+        <h1>CRM do diagnóstico</h1>
+        <p class="lede">Entre para ver os casos respondidos e tratar cada operação separadamente.</p>
+        <form id="loginForm">
+          <label class="field-label" for="email">E-mail</label>
+          <input class="field" id="email" type="email" autocomplete="username" required />
+          <label class="field-label" for="password">Senha</label>
+          <input class="field" id="password" type="password" autocomplete="current-password" required />
+          <div class="login-actions">
+            <button class="primary" type="submit" id="loginBtn">Entrar</button>
+          </div>
+          <p class="login-error" id="loginError"></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="crmView" hidden>
+      <div class="layout">
+        <aside class="card">
+          <div class="label">Casos</div>
+          <div class="stats" id="stats"></div>
+          <div class="filters">
+            <input class="field" id="search" type="search" placeholder="Buscar empresa, nome ou cargo" />
+            <div class="filters-row">
+              <select class="select" id="statusFilter">
+                <option value="">Todos os status</option>
+                <option value="novo">Novo</option>
+                <option value="em_analise">Em análise</option>
+                <option value="qualificado">Qualificado</option>
+                <option value="em_contato">Em contato</option>
+                <option value="piloto">Piloto</option>
+                <option value="descartado">Descartado</option>
+              </select>
+              <select class="select" id="sortBy">
+                <option value="recent">Mais recentes</option>
+                <option value="empresa">Empresa A–Z</option>
+                <option value="dor">Maior dor</option>
+              </select>
+            </div>
+          </div>
+          <div class="case-list" id="caseList"></div>
+        </aside>
+
+        <main class="card" id="detailPanel">
+          <div class="detail-empty">Selecione um caso à esquerda para ver o diagnóstico completo.</div>
+        </main>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://gdcaxslhskxzcrbejxxo.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkY2F4c2xoc2t4emNyYmVqeHhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0NzUyMjUsImV4cCI6MjEwNTA1MTIyNX0.Q89SEJ-W9SY6FCHRFBWqNoJdjnimu5A4ewG64E-Mc0Q";
+
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const LABELS = {
+      controle: {
+        manual: "Manual",
+        ponto_auto: "Ponto, pouco tratamento",
+        ponto_manual: "Ponto, RH trata",
+        rastreador: "Rastreador",
+        ambos: "Ponto + rastreador"
+      },
+      auditor: {
+        rh: "RH", dp: "DP", frota: "Frota", operacao: "Operação",
+        contador: "Contador", advogado: "Advogado externo", ninguem: "Ninguém"
+      },
+      cruzamento: { auto: "Automático", manual: "Manual", nao: "Não cruzam", faltadado: "Faltam dados" },
+      divergencia: {
+        nao_cruzam: "Não cruzam", nunca: "Nunca acharam diferença", rh_chama: "RH chama o motorista",
+        gestor_corrige: "Gestor corrige", ignora: "Ignoram", sem_rito: "Sem rito",
+        bloqueia: "Sistema bloqueia", juridico: "Vai ao jurídico"
+      },
+      banco: { sistema: "Sistema", planilha: "Planilha", nao_controla: "Frágil", nao_tem: "Não tem" },
+      cct_quem: { rh: "RH", juridico: "Jurídico interno", externo: "Externo", sistema: "Sistema", ninguem: "Ninguém" },
+      reclamacao: { sim: "Sim", nao: "Não", omitir: "Não informado" },
+      maior_dor: {
+        esquece_ponto: "Esquece de bater o ponto",
+        demora_fechar: "Fechamento demorado",
+        nao_sabe_trabalhando: "Não confirma se estava trabalhando",
+        sistemas_nao_conversam: "Ponto e rastreador não conversam",
+        cct: "CCT difícil de parametrizar",
+        acoes: "Questionamentos trabalhistas",
+        hora_extra: "Hora extra sem controle",
+        banco: "Banco de horas descontrolado"
+      },
+      status: {
+        novo: "Novo",
+        em_analise: "Em análise",
+        qualificado: "Qualificado",
+        em_contato: "Em contato",
+        piloto: "Piloto",
+        descartado: "Descartado"
+      }
+    };
+
+    const state = {
+      session: null,
+      cases: [],
+      selectedId: null,
+      saving: false
+    };
+
+    const els = {
+      loginView: document.getElementById("loginView"),
+      crmView: document.getElementById("crmView"),
+      loginForm: document.getElementById("loginForm"),
+      loginError: document.getElementById("loginError"),
+      loginBtn: document.getElementById("loginBtn"),
+      userEmail: document.getElementById("userEmail"),
+      logoutBtn: document.getElementById("logoutBtn"),
+      themeBtn: document.getElementById("themeBtn"),
+      caseList: document.getElementById("caseList"),
+      detailPanel: document.getElementById("detailPanel"),
+      search: document.getElementById("search"),
+      statusFilter: document.getElementById("statusFilter"),
+      sortBy: document.getElementById("sortBy"),
+      stats: document.getElementById("stats")
+    };
+
+    (function initTheme() {
+      const saved = localStorage.getItem("jl-theme");
+      const theme = saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+      els.themeBtn.textContent = theme === "dark" ? "Claro" : "Escuro";
+    })();
+
+    els.themeBtn.addEventListener("click", () => {
+      const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("jl-theme", next);
+      els.themeBtn.textContent = next === "dark" ? "Claro" : "Escuro";
+    });
+
+    function label(group, key) {
+      return (LABELS[group] && LABELS[group][key]) || key || "—";
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function formatDate(iso) {
+      if (!iso) return "—";
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return "—";
+      return d.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+    }
+
+    function scoreCase(row) {
+      let score = 0;
+      if (["manual", "ponto_manual"].includes(row.controle)) score += 2;
+      if (row.auditor === "ninguem") score += 3;
+      if (["nao", "faltadado", "manual"].includes(row.cruzamento)) score += 2;
+      if (["ignora", "sem_rito", "nao_cruzam"].includes(row.divergencia)) score += 3;
+      if (["planilha", "nao_controla"].includes(row.banco)) score += 2;
+      if (row.cct_quem === "ninguem") score += 2;
+      if (row.reclamacao === "sim") score += 3;
+      if (["sistemas_nao_conversam", "acoes", "nao_sabe_trabalhando", "banco"].includes(row.maior_dor)) score += 2;
+      return score;
+    }
+
+    function riskLevel(score) {
+      if (score >= 10) return { key: "high", label: "Risco / dor alta" };
+      if (score >= 5) return { key: "mid", label: "Atenção moderada" };
+      return { key: "low", label: "Cenário mais maduro" };
+    }
+
+    function reading(row) {
+      const bits = [];
+      if (row.controle === "manual") bits.push("Controle ainda muito manual — dependência de pessoas e margem de erro.");
+      if (row.controle === "ponto_manual") bits.push("Há sistema de ponto, mas o RH ainda trata: gap entre registro e gestão.");
+      if (row.controle === "ambos" && row.cruzamento !== "auto") bits.push("Ponto e rastreador existem, mas o cruzamento não é automático.");
+      if (row.auditor === "ninguem") bits.push("Ninguém audita de fato — inconsistências só aparecem no fechamento (ou nem aparecem).");
+      if (["ignora", "sem_rito"].includes(row.divergencia)) bits.push("Quando ponto e operação não batem, o rito é frágil ou inexistente.");
+      if (["planilha", "nao_controla"].includes(row.banco)) bits.push("Banco de horas frágil — risco financeiro/jurídico recorrente.");
+      if (row.cct_quem === "ninguem") bits.push("CCT sem dono contínuo — risco de regra jurídica ≠ regra no sistema.");
+      if (row.reclamacao === "sim") bits.push("Já houve questionamento trabalhista ligado à jornada.");
+      if (!bits.length) bits.push("Cenário relativamente organizado; ainda vale mapear se o cruzamento e a evidência sustentam disputa.");
+      return bits;
+    }
+
+    async function boot() {
+      const { data: { session } } = await sb.auth.getSession();
+      setSession(session);
+      sb.auth.onAuthStateChange((_event, session) => setSession(session));
+    }
+
+    async function setSession(session) {
+      state.session = session;
+      const authed = Boolean(session);
+      els.loginView.hidden = authed;
+      els.crmView.hidden = !authed;
+      els.logoutBtn.hidden = !authed;
+      els.userEmail.hidden = !authed;
+      els.userEmail.textContent = session?.user?.email || "";
+      if (authed) await loadCases();
+      else {
+        state.cases = [];
+        state.selectedId = null;
+        els.caseList.innerHTML = "";
+        els.detailPanel.innerHTML = `<div class="detail-empty">Selecione um caso à esquerda para ver o diagnóstico completo.</div>`;
+      }
+    }
+
+    els.loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      els.loginError.textContent = "";
+      els.loginBtn.disabled = true;
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      els.loginBtn.disabled = false;
+      if (error) {
+        els.loginError.textContent = error.message === "Invalid login credentials"
+          ? "E-mail ou senha inválidos."
+          : error.message;
+      }
+    });
+
+    els.logoutBtn.addEventListener("click", async () => {
+      await sb.auth.signOut();
+    });
+
+    async function loadCases() {
+      const { data, error } = await sb
+        .from("diagnostico_jornada")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) {
+        els.caseList.innerHTML = `<p class="muted">${escapeHtml(error.message)}</p>`;
+        return;
+      }
+      state.cases = data || [];
+      if (state.selectedId && !state.cases.some((c) => c.id === state.selectedId)) {
+        state.selectedId = null;
+      }
+      renderList();
+      renderDetail();
+    }
+
+    function filteredCases() {
+      const q = els.search.value.trim().toLowerCase();
+      const status = els.statusFilter.value;
+      let rows = [...state.cases];
+      if (status) rows = rows.filter((r) => r.status === status);
+      if (q) {
+        rows = rows.filter((r) =>
+          [r.empresa, r.nome, r.cargo, r.maior_dor]
+            .map((x) => String(x || "").toLowerCase())
+            .some((x) => x.includes(q))
+        );
+      }
+      const sort = els.sortBy.value;
+      if (sort === "empresa") {
+        rows.sort((a, b) => String(a.empresa || "").localeCompare(String(b.empresa || ""), "pt-BR"));
+      } else if (sort === "dor") {
+        rows.sort((a, b) => scoreCase(b) - scoreCase(a));
+      } else {
+        rows.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      }
+      return rows;
+    }
+
+    function renderList() {
+      const rows = filteredCases();
+      const total = state.cases.length;
+      const novos = state.cases.filter((c) => c.status === "novo").length;
+      const empresas = new Set(state.cases.map((c) => (c.empresa || "").trim().toLowerCase()).filter(Boolean)).size;
+      els.stats.innerHTML = `
+        <span class="stat">${total} respostas</span>
+        <span class="stat">${empresas} empresas</span>
+        <span class="stat">${novos} novos</span>
+      `;
+
+      if (!rows.length) {
+        els.caseList.innerHTML = `<p class="muted">Nenhum caso encontrado.</p>`;
+        return;
+      }
+
+      els.caseList.innerHTML = rows.map((row) => `
+        <button type="button" class="case-item ${row.id === state.selectedId ? "active" : ""}" data-id="${row.id}">
+          <div class="empresa">${escapeHtml(row.empresa || "Sem empresa")}</div>
+          <div class="meta">
+            <span>${escapeHtml(row.nome || "—")} · ${escapeHtml(row.cargo || "—")}</span>
+            <span class="badge ${escapeHtml(row.status || "novo")}">${escapeHtml(label("status", row.status || "novo"))}</span>
+          </div>
+          <div class="meta">
+            <span>${escapeHtml(label("maior_dor", row.maior_dor))}</span>
+            <span>${escapeHtml(formatDate(row.created_at))}</span>
+          </div>
+        </button>
+      `).join("");
+
+      els.caseList.querySelectorAll(".case-item").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.selectedId = btn.dataset.id;
+          renderList();
+          renderDetail();
+        });
+      });
+    }
+
+    function selectedCase() {
+      return state.cases.find((c) => c.id === state.selectedId) || null;
+    }
+
+    function renderDetail() {
+      const row = selectedCase();
+      if (!row) {
+        els.detailPanel.innerHTML = `<div class="detail-empty">Selecione um caso à esquerda para ver o diagnóstico completo.</div>`;
+        return;
+      }
+
+      const score = scoreCase(row);
+      const risk = riskLevel(score);
+      const insights = reading(row);
+
+      els.detailPanel.innerHTML = `
+        <div class="detail-head">
+          <div>
+            <div class="kicker">Caso · ${escapeHtml(row.id.slice(0, 8))}</div>
+            <h1>${escapeHtml(row.empresa || "Sem empresa")}</h1>
+            <p class="lede">${escapeHtml(row.nome || "—")} · ${escapeHtml(row.cargo || "—")} · respondido em ${escapeHtml(formatDate(row.created_at))}</p>
+          </div>
+          <span class="badge ${escapeHtml(row.status || "novo")}">${escapeHtml(label("status", row.status || "novo"))}</span>
+        </div>
+
+        <div class="grid-2">
+          <div class="card" style="margin:0;box-shadow:none;">
+            <div class="label">O que isso já mostra</div>
+            <ul class="insight-list">
+              <li><strong>Controle:</strong> ${escapeHtml(label("controle", row.controle))}</li>
+              <li><strong>Auditoria:</strong> ${escapeHtml(label("auditor", row.auditor))}</li>
+              <li><strong>Cruzamento:</strong> ${escapeHtml(label("cruzamento", row.cruzamento))}</li>
+              <li><strong>Quando não bate:</strong> ${escapeHtml(label("divergencia", row.divergencia))}</li>
+              <li><strong>Banco de horas:</strong> ${escapeHtml(label("banco", row.banco))}</li>
+              <li><strong>CCT:</strong> ${escapeHtml(label("cct_quem", row.cct_quem))}</li>
+              <li><strong>Questionamento trabalhista:</strong> ${escapeHtml(label("reclamacao", row.reclamacao))}</li>
+              <li><strong>Maior dificuldade:</strong> ${escapeHtml(label("maior_dor", row.maior_dor))}</li>
+            </ul>
+          </div>
+
+          <div>
+            <div class="card signal ${risk.key}" style="margin:0;box-shadow:none;">
+              <div class="label">Leitura DashiTecnology</div>
+              <h3>${escapeHtml(risk.label)} · score ${score}</h3>
+              <ul class="insight-list">
+                ${insights.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}
+              </ul>
+            </div>
+            <div class="card signal" style="margin-top:0.85rem;box-shadow:none;">
+              <div class="label">A maior dificuldade apontada</div>
+              <h3 style="margin:0;">${escapeHtml(label("maior_dor", row.maior_dor))}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:0.85rem;box-shadow:none;">
+          <div class="label">Tratamento do caso</div>
+          <p class="muted">Atualize o status e registre o entendimento comercial/jurídico para este caso.</p>
+          <div class="treat-bar">
+            <div>
+              <label class="field-label" for="caseStatus">Status</label>
+              <select class="select" id="caseStatus">
+                ${Object.entries(LABELS.status).map(([k, v]) =>
+                  `<option value="${k}" ${row.status === k ? "selected" : ""}>${escapeHtml(v)}</option>`
+                ).join("")}
+              </select>
+            </div>
+            <div>
+              <label class="field-label" for="caseNotes">Notas internas</label>
+              <textarea class="textarea" id="caseNotes" placeholder="Hipótese de dor, comprador, próximo passo…">${escapeHtml(row.notas || "")}</textarea>
+            </div>
+            <button type="button" class="primary" id="saveCase">Salvar</button>
+          </div>
+          <p class="save-note" id="saveNote"></p>
+        </div>
+      `;
+
+      document.getElementById("saveCase").addEventListener("click", () => saveCase(row.id));
+    }
+
+    async function saveCase(id) {
+      if (state.saving) return;
+      const status = document.getElementById("caseStatus").value;
+      const notas = document.getElementById("caseNotes").value.trim();
+      const note = document.getElementById("saveNote");
+      state.saving = true;
+      note.textContent = "Salvando…";
+      note.style.color = "var(--muted)";
+
+      const { data, error } = await sb
+        .from("diagnostico_jornada")
+        .update({ status, notas })
+        .eq("id", id)
+        .select("*")
+        .single();
+
+      state.saving = false;
+      if (error) {
+        note.textContent = error.message;
+        note.style.color = "var(--bad)";
+        return;
+      }
+
+      const idx = state.cases.findIndex((c) => c.id === id);
+      if (idx >= 0) state.cases[idx] = data;
+      note.textContent = "Caso atualizado.";
+      note.style.color = "var(--ok)";
+      renderList();
+      renderDetail();
+    }
+
+    ["input", "change"].forEach((evt) => {
+      els.search.addEventListener(evt, renderList);
+      els.statusFilter.addEventListener(evt, renderList);
+      els.sortBy.addEventListener(evt, renderList);
+    });
+
+    boot();
+  </script>
+</body>
+</html>

@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Diagnóstico de Jornada — DashiTecnology</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root,
+    [data-theme="light"] {
+      --navy: #002B8F;
+      --royal: #0D47C9;
+      --electric: #2563EB;
+      --orange: #FF5A00;
+      --orange-soft: #FF7A1A;
+      --off-white: #F4F4F4;
+      --dark: #1E1E1E;
+      --muted: rgba(30, 30, 30, 0.62);
+      --line: rgba(0, 43, 143, 0.12);
+      --surface: rgba(255, 255, 255, 0.86);
+      --bg-grad-1: rgba(37, 99, 235, 0.18);
+      --bg-grad-2: rgba(255, 90, 0, 0.10);
+      --bg-base: linear-gradient(160deg, #EEF2FF 0%, #F4F4F4 42%, #F7F8FB 100%);
+      --grid-line: rgba(0, 43, 143, 0.04);
+      --heading: #002B8F;
+      --ok: #0F7B4A;
+      --ok-bg: rgba(15, 123, 74, 0.1);
+      --warn: #B45309;
+      --warn-bg: rgba(180, 83, 9, 0.1);
+      --bad: #B42318;
+      --bad-bg: rgba(180, 35, 24, 0.08);
+      --shadow-soft: 0 12px 40px rgba(0, 43, 143, 0.08);
+      --choice-hover: rgba(0, 43, 143, 0.05);
+      --choice-on: rgba(255, 90, 0, 0.12);
+    }
+
+    [data-theme="dark"] {
+      --navy: #7BA3FF;
+      --royal: #5B8CFF;
+      --electric: #2563EB;
+      --orange: #FF5A00;
+      --orange-soft: #FF7A1A;
+      --off-white: #12141A;
+      --dark: #F4F4F4;
+      --muted: rgba(244, 244, 244, 0.62);
+      --line: rgba(123, 163, 255, 0.18);
+      --surface: rgba(26, 29, 38, 0.9);
+      --bg-grad-1: rgba(37, 99, 235, 0.22);
+      --bg-grad-2: rgba(255, 90, 0, 0.12);
+      --bg-base: linear-gradient(160deg, #0E1118 0%, #12141A 45%, #161A24 100%);
+      --grid-line: rgba(123, 163, 255, 0.06);
+      --heading: #E8EEFF;
+      --ok: #34D399;
+      --ok-bg: rgba(52, 211, 153, 0.12);
+      --warn: #FBBF24;
+      --warn-bg: rgba(251, 191, 36, 0.12);
+      --bad: #F87171;
+      --bad-bg: rgba(248, 113, 113, 0.12);
+      --shadow-soft: 0 12px 40px rgba(0, 0, 0, 0.35);
+      --choice-hover: rgba(123, 163, 255, 0.08);
+      --choice-on: rgba(255, 90, 0, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      background: var(--off-white);
+      color: var(--dark);
+      font-family: "Outfit", sans-serif;
+      line-height: 1.55;
+      transition: background 0.35s ease, color 0.35s ease;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 50% at 0% 0%, var(--bg-grad-1), transparent 55%),
+        radial-gradient(ellipse 55% 45% at 100% 100%, var(--bg-grad-2), transparent 50%),
+        var(--bg-base);
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.35;
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 1.25rem 1.25rem 4.5rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1, h2, h3 {
+      font-family: "Chakra Petch", sans-serif;
+      color: var(--heading);
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    h1 { font-size: clamp(1.7rem, 4vw, 2.45rem); margin-bottom: 0.75rem; }
+    h2 { font-size: clamp(1.35rem, 3.2vw, 1.85rem); }
+    p { margin-bottom: 0.85rem; }
+    .lede { font-size: 1.12rem; color: var(--muted); max-width: 40rem; }
+
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 0.75rem;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 0 0 1.15rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      min-width: 0;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand img {
+      height: 52px;
+      width: auto;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    .brand-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 0.08rem;
+      min-width: 0;
+    }
+
+    .brand-name {
+      font-family: "Chakra Petch", sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+      color: var(--heading);
+      line-height: 1.1;
+    }
+
+    .brand-tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
+    .toolbar button,
+    .ghost,
+    .primary {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--heading);
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: var(--orange);
+      border-color: transparent;
+      color: #fff;
+      font-size: 1rem;
+      padding: 0.85rem 1.4rem;
+    }
+
+    .primary:hover { background: var(--orange-soft); }
+    .primary:disabled,
+    .ghost:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .ghost { background: transparent; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 1.15rem 1.2rem;
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(10px);
+    }
+
+    .label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.35rem;
+      color: var(--orange);
+    }
+
+    .progress-wrap {
+      margin-bottom: 1.4rem;
+    }
+
+    .blocks {
+      display: flex;
+      gap: 0.35rem;
+      margin-bottom: 0.55rem;
+      flex-wrap: wrap;
+    }
+
+    .block-chip {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0.2rem 0.45rem;
+      border-radius: 6px;
+      border: 1px solid transparent;
+    }
+
+    .block-chip.on {
+      color: var(--heading);
+      background: var(--choice-on);
+      border-color: rgba(255, 90, 0, 0.25);
+    }
+
+    .block-chip.done { color: var(--ok); }
+
+    .bar {
+      height: 6px;
+      background: var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--navy), var(--orange));
+      border-radius: inherit;
+      transition: width 0.45s ease;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+    }
+
+    .stage { flex: 1; display: flex; flex-direction: column; }
+
+    .q-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 52vh;
+    }
+
+    .q-card.swap {
+      animation: rise 0.42s ease;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .choices {
+      display: grid;
+      gap: 0.55rem;
+      margin-top: 1.1rem;
+    }
+
+    .choice {
+      text-align: left;
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--dark);
+      font-family: inherit;
+      font-size: 1.02rem;
+      padding: 0.9rem 1rem;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+    }
+
+    .choice:hover { background: var(--choice-hover); }
+    .choice:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+    .choice.picked {
+      border-color: var(--orange);
+      background: var(--choice-on);
+      transform: scale(1.01);
+    }
+
+    .choice small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.84rem;
+      margin-top: 0.2rem;
+    }
+
+    .field-label {
+      display: block;
+      margin-top: 0.95rem;
+      margin-bottom: 0.35rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .field {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--dark);
+      font-family: inherit;
+      font-size: 1.05rem;
+      padding: 0.9rem 1rem;
+      border-radius: 14px;
+      resize: vertical;
+    }
+
+    .field:focus {
+      outline: 2px solid var(--orange);
+      outline-offset: 1px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      margin-top: 1.15rem;
+      flex-wrap: wrap;
+    }
+
+    .compare {
+      margin-top: 1rem;
+      font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: var(--heading);
+    }
+
+    .compare .row { display: grid; grid-template-columns: 7.2rem 1fr; gap: 0.5rem; align-items: center; }
+    .compare .track {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(0, 43, 143, 0.12);
+      position: relative;
+    }
+    [data-theme="dark"] .compare .track { background: rgba(123, 163, 255, 0.18); }
+    .compare .fill {
+      position: absolute;
+      display: block;
+      font-style: normal;
+      top: 0; bottom: 0;
+      border-radius: inherit;
+    }
+    .compare .ponto { left: 12%; width: 58%; background: var(--navy); }
+    .compare .rast { left: 4%; width: 82%; background: var(--orange); opacity: 0.85; }
+    .compare .times { color: var(--muted); font-size: 0.72rem; }
+
+    footer {
+      margin-top: 2rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .thanks { text-align: left; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+      background: rgba(15, 18, 28, 0.55);
+      backdrop-filter: blur(6px);
+    }
+
+    .modal-backdrop[hidden] { display: none; }
+
+    .modal {
+      width: min(100%, 440px);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 1.35rem 1.35rem 1.25rem;
+      box-shadow: var(--shadow-soft);
+      animation: rise 0.35s ease;
+    }
+
+    .modal h2 {
+      font-size: 1.35rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .modal p {
+      color: var(--muted);
+      font-size: 1.02rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .modal .actions {
+      margin-top: 0;
+      justify-content: flex-end;
+    }
+
+    @media (max-width: 640px) {
+      .q-card { min-height: auto; padding-top: 0.5rem; }
+      .choice { font-size: 0.98rem; }
+      .brand img { height: 42px; }
+      .brand-name { font-size: 0.95rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .q-card.swap, .bar > span, .choice, .modal { animation: none; transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="modal-backdrop" id="welcomeModal" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" hidden>
+    <div class="modal">
+      <div class="kicker">DashiTecnology · Diagnóstico</div>
+      <h2 id="welcomeTitle">Antes de começar</h2>
+      <p>
+        Este questionário é rápido: primeiro você se identifica e, em seguida,
+        responde 8 perguntas objetivas sobre como a jornada dos motoristas é
+        controlada hoje. Escolha a opção que melhor descreve a rotina real —
+        não é preciso escrever textos longos.
+      </p>
+      <div class="actions">
+        <button type="button" class="primary" id="welcomeStart">Entendi, começar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <header class="toolbar">
+      <div class="brand">
+        <img src="LOGO-Dashi-tecnology-instagram-1-3-removebg-preview.png" alt="Logo DashiTecnology" />
+        <div class="brand-copy">
+          <span class="brand-name">DashiTecnology</span>
+          <span class="brand-tag">Diagnóstico de jornada</span>
+        </div>
+      </div>
+      <button type="button" id="themeBtn" aria-label="Alternar tema">Tema</button>
+    </header>
+
+    <div class="stage" id="app"></div>
+
+    <footer id="foot">DashiTecnology · Diagnóstico de jornada — as respostas são enviadas ao final para análise interna.</footer>
+  </div>
+
+  <script>
+    const BLOCKS = [
+      { id: "intro", label: "Início" },
+      { id: "operacao", label: "Operação" },
+      { id: "auditoria", label: "Auditoria" },
+      { id: "conformidade", label: "Conformidade" },
+      { id: "rotina", label: "Rotina" }
+    ];
+
+    const QUESTIONS = [
+      {
+        id: "who",
+        block: "intro",
+        type: "form",
+        title: "Quem está respondendo?",
+        lede: "Só para identificar o colaborador. Em seguida, 8 perguntas rápidas sobre a jornada.",
+        fields: [
+          { id: "empresa", label: "Empresa", placeholder: "Nome da transportadora", required: true },
+          { id: "nome", label: "Seu nome", placeholder: "Como podemos te chamar", required: true },
+          { id: "cargo", label: "Cargo / área", placeholder: "RH, DP, operação, jurídico…", required: true }
+        ]
+      },
+      {
+        id: "controle",
+        block: "operacao",
+        type: "choice",
+        title: "Como vocês controlam hoje a jornada dos motoristas?",
+        lede: "Responda do jeito que funciona na prática — não o que está no manual.",
+        options: [
+          { id: "manual", label: "De forma manual", hint: "WhatsApp, planilha, o motorista informa e o RH lança." },
+          { id: "ponto_auto", label: "Software de ponto, quase sem tratamento", hint: "O sistema fecha a jornada com pouca intervenção." },
+          { id: "ponto_manual", label: "Software de ponto, mas o RH ainda trata os dados", hint: "Existe sistema, porém o fechamento depende de gente." },
+          { id: "rastreador", label: "Pelo rastreador / telemetria", hint: "Os eventos do veículo são a referência da jornada." },
+          { id: "ambos", label: "Ponto e rastreador, em paralelo", hint: "Os dois existem, mas não necessariamente conversam." }
+        ]
+      },
+      {
+        id: "auditor",
+        block: "auditoria",
+        type: "choice",
+        title: "Depois que a jornada é registrada, quem verifica se está tudo certo?",
+        options: [
+          { id: "rh", label: "RH" },
+          { id: "dp", label: "Departamento Pessoal" },
+          { id: "frota", label: "Gestor de frota" },
+          { id: "operacao", label: "Gerente operacional" },
+          { id: "contador", label: "Contador" },
+          { id: "advogado", label: "Advogado externo" },
+          { id: "ninguem", label: "Ninguém, de fato", hint: "Se tiver errado, a gente vê no fechamento — ou nem vê." }
+        ]
+      },
+      {
+        id: "cruzamento",
+        block: "auditoria",
+        type: "choice",
+        title: "Vocês conseguem comparar o ponto com o que aconteceu no veículo?",
+        lede: "Jornada declarada versus jornada operacional observável.",
+        compare: true,
+        options: [
+          { id: "auto", label: "Sim — cruzamento automático" },
+          { id: "manual", label: "Sim — mas é manual" },
+          { id: "nao", label: "Não cruzamos" },
+          { id: "faltadado", label: "Não temos os dois dados juntos" }
+        ]
+      },
+      {
+        id: "divergencia",
+        block: "auditoria",
+        type: "choice",
+        title: "Quando o ponto e a operação não batem, o que acontece?",
+        options: [
+          { id: "nao_cruzam", label: "Não cruzamos, então não sabemos" },
+          { id: "nunca", label: "Nunca encontramos diferença" },
+          { id: "rh_chama", label: "O RH chama o motorista" },
+          { id: "gestor_corrige", label: "O gestor corrige" },
+          { id: "ignora", label: "Na prática, ignoramos" },
+          { id: "sem_rito", label: "Não temos um rito claro" },
+          { id: "bloqueia", label: "O sistema bloqueia" },
+          { id: "juridico", label: "Segue para o jurídico" }
+        ]
+      },
+      {
+        id: "banco",
+        block: "conformidade",
+        type: "choice",
+        title: "Como vocês controlam o banco de horas hoje?",
+        options: [
+          { id: "sistema", label: "No sistema, de forma estruturada" },
+          { id: "planilha", label: "Em planilha / controle paralelo" },
+          { id: "nao_controla", label: "Temos banco, mas o controle é frágil" },
+          { id: "nao_tem", label: "Não trabalhamos com banco de horas" }
+        ]
+      },
+      {
+        id: "cct_quem",
+        block: "conformidade",
+        type: "choice",
+        title: "Quem verifica se a jornada está de acordo com a CCT aplicável?",
+        options: [
+          { id: "rh", label: "RH interno" },
+          { id: "juridico", label: "Jurídico interno" },
+          { id: "externo", label: "Advogado / contador externo" },
+          { id: "sistema", label: "O sistema já vem parametrizado" },
+          { id: "ninguem", label: "Ninguém assume isso de forma contínua" }
+        ]
+      },
+      {
+        id: "reclamacao",
+        block: "conformidade",
+        type: "choice",
+        title: "Nos últimos anos, vocês já tiveram algum questionamento trabalhista ligado à jornada dos motoristas?",
+        options: [
+          { id: "sim", label: "Sim" },
+          { id: "nao", label: "Não" },
+          { id: "omitir", label: "Prefiro não informar" }
+        ]
+      },
+      {
+        id: "maior_dor",
+        block: "rotina",
+        type: "choice",
+        title: "Qual é, hoje, a maior dificuldade em relação à jornada dos motoristas?",
+        options: [
+          { id: "esquece_ponto", label: "O motorista esquece de bater o ponto" },
+          { id: "demora_fechar", label: "O fechamento da jornada demora demais" },
+          { id: "nao_sabe_trabalhando", label: "Não dá para saber se o motorista realmente estava trabalhando" },
+          { id: "sistemas_nao_conversam", label: "O ponto não conversa com o rastreador" },
+          { id: "cct", label: "A CCT muda e ninguém sabe o que parametrizar" },
+          { id: "acoes", label: "Já existem questionamentos trabalhistas de jornada" },
+          { id: "hora_extra", label: "O gestor libera hora extra sem um controle claro" },
+          { id: "banco", label: "O banco de horas fica descontrolado" }
+        ]
+      }
+    ];
+
+    const KEY = "diagnostico-jornada-v3";
+    const WEBHOOK_URL = "https://srv1975703.hstgr.cloud/webhook/diagnostico-jornada";
+    const state = load() || { answers: {}, history: [], done: false };
+
+    const app = document.getElementById("app");
+    const themeBtn = document.getElementById("themeBtn");
+
+    (function initTheme() {
+      const saved = localStorage.getItem("jl-theme");
+      const theme = saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+      themeBtn.textContent = theme === "dark" ? "Claro" : "Escuro";
+    })();
+
+    themeBtn.addEventListener("click", () => {
+      const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("jl-theme", next);
+      themeBtn.textContent = next === "dark" ? "Claro" : "Escuro";
+    });
+
+    function load() {
+      try { return JSON.parse(sessionStorage.getItem(KEY) || ""); }
+      catch { return null; }
+    }
+    function save() {
+      sessionStorage.setItem(KEY, JSON.stringify(state));
+    }
+
+    function visibleQuestions() {
+      return QUESTIONS.filter((q) => !q.showIf || q.showIf(state.answers));
+    }
+
+    function currentId() {
+      if (state.done) return null;
+      if (!state.history.length) return QUESTIONS[0].id;
+      return state.history[state.history.length - 1];
+    }
+
+    function byId(id) {
+      return QUESTIONS.find((q) => q.id === id);
+    }
+
+    function nextAfter(id) {
+      const vis = visibleQuestions();
+      const i = vis.findIndex((q) => q.id === id);
+      return vis[i + 1] || null;
+    }
+
+    function progress() {
+      const vis = visibleQuestions();
+      const id = currentId();
+      const i = Math.max(0, vis.findIndex((q) => q.id === id));
+      const pct = state.done ? 100 : Math.round((i / vis.length) * 100);
+      const q = id ? byId(id) : { block: "rotina" };
+      return { pct, block: q.block, index: i + 1, total: vis.length };
+    }
+
+    function render() {
+      save();
+      if (state.done) return renderThanks();
+      const q = byId(currentId());
+      if (!q) return renderThanks();
+      const p = progress();
+      const blockIdx = BLOCKS.findIndex((b) => b.id === q.block);
+
+      app.innerHTML = `
+        <div class="progress-wrap">
+          <div class="blocks">
+            ${BLOCKS.map((b, i) => `<span class="block-chip ${i < blockIdx ? "done" : ""} ${b.id === q.block ? "on" : ""}">${b.label}</span>`).join("")}
+          </div>
+          <div class="bar" aria-hidden="true"><span style="width:${p.pct}%"></span></div>
+          <div class="meta"><span>${p.index} de ${p.total}</span><span>${p.pct}%</span></div>
+        </div>
+        <div class="q-card swap" id="qcard"></div>
+      `;
+      document.getElementById("qcard").appendChild(viewFor(q));
+    }
+
+    function viewFor(q) {
+      const wrap = document.createElement("div");
+      wrap.innerHTML = `
+        <div class="kicker">DashiTecnology · Diagnóstico</div>
+        <h2>${escapeHtml(q.title)}</h2>
+        ${q.lede ? `<p class="lede">${escapeHtml(q.lede)}</p>` : ""}
+        ${q.compare ? compareMarkup() : ""}
+      `;
+
+      if (q.type === "form") {
+        const inputs = [];
+        q.fields.forEach((f) => {
+          const label = el("label", { class: "field-label" });
+          label.textContent = f.label;
+          label.setAttribute("for", f.id);
+          const input = el("input", {
+            class: "field",
+            id: f.id,
+            placeholder: f.placeholder,
+            value: state.answers[f.id] || "",
+            autocomplete: "off"
+          });
+          input.setAttribute("aria-label", f.label);
+          wrap.appendChild(label);
+          wrap.appendChild(input);
+          inputs.push({ field: f, input });
+        });
+        const go = navRow(q, () => {
+          inputs.forEach(({ field, input }) => {
+            state.answers[field.id] = (input.value || "").trim();
+          });
+          goNext(q);
+        }, { label: "Começar", requireAll: inputs });
+        wrap.appendChild(go);
+      }
+
+      if (q.type === "choice") {
+        const box = el("div", { class: "choices" });
+        q.options.forEach((opt) => {
+          const btn = el("button", { class: "choice" + (state.answers[q.id] === opt.id ? " picked" : ""), type: "button" });
+          btn.innerHTML = `${escapeHtml(opt.label)}${opt.hint ? `<small>${escapeHtml(opt.hint)}</small>` : ""}`;
+          btn.addEventListener("click", () => pick(q, opt.id, btn));
+          box.appendChild(btn);
+        });
+        wrap.appendChild(box);
+        wrap.appendChild(navRow(q, null, { hideContinue: true }));
+      }
+
+      return wrap;
+    }
+
+    function compareMarkup() {
+      return `
+        <div class="card compare">
+          <div class="row"><span>Ponto</span><div class="track"><i class="fill ponto"></i></div></div>
+          <div class="row times"><span></span><span>07:00 — 18:00</span></div>
+          <div class="row"><span>Rastreamento</span><div class="track"><i class="fill rast"></i></div></div>
+          <div class="row times"><span></span><span>06:32 — 19:14</span></div>
+        </div>`;
+    }
+
+    function navRow(q, onContinue, opts = {}) {
+      const row = el("div", { class: "actions" });
+      const back = el("button", { class: "ghost", type: "button" }, "Voltar");
+      back.disabled = state.history.length <= 1;
+      back.addEventListener("click", goBack);
+      row.appendChild(back);
+
+      if (!opts.hideContinue) {
+        const go = el("button", { class: "primary", type: "button" }, opts.label || "Continuar");
+        const sync = () => {
+          if (opts.requireAll) {
+            go.disabled = opts.requireAll.some(({ field, input }) =>
+              field.required && !(input.value || "").trim()
+            );
+            return;
+          }
+          if (!opts.require) return;
+          go.disabled = !(opts.input?.value || "").trim();
+        };
+        sync();
+        opts.input?.addEventListener("input", sync);
+        opts.requireAll?.forEach(({ input }) => input.addEventListener("input", sync));
+        go.addEventListener("click", onContinue);
+        row.appendChild(go);
+      }
+      return row;
+    }
+
+    function pick(q, optionId, btn) {
+      [...btn.parentElement.children].forEach((c) => c.classList.remove("picked"));
+      btn.classList.add("picked");
+      state.answers[q.id] = optionId;
+      setTimeout(() => goNext(q), 160);
+    }
+
+    function goNext(q) {
+      const nxt = nextAfter(q.id);
+      if (!nxt) {
+        state.done = true;
+        state.finishedAt = new Date().toISOString();
+        save();
+        submitAnswers().finally(() => render());
+        return;
+      }
+      state.history.push(nxt.id);
+      render();
+    }
+
+    async function submitAnswers() {
+      if (state.submitted) return;
+      const a = state.answers;
+      const payload = {
+        empresa: a.empresa || "",
+        nome: a.nome || "",
+        cargo: a.cargo || "",
+        controle: a.controle || null,
+        auditor: a.auditor || null,
+        cruzamento: a.cruzamento || null,
+        divergencia: a.divergencia || null,
+        banco: a.banco || null,
+        cct_quem: a.cct_quem || null,
+        reclamacao: a.reclamacao || null,
+        maior_dor: a.maior_dor || null,
+        finished_at: state.finishedAt || new Date().toISOString(),
+        user_agent: navigator.userAgent || "",
+        origem: "diagnostico-jornada",
+        respostas: { ...a }
+      };
+      try {
+        const res = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json().catch(() => ({}));
+        state.submitted = Boolean(res.ok && data.ok !== false);
+        state.submitError = state.submitted ? null : (data.message || "Falha ao enviar.");
+      } catch {
+        state.submitted = false;
+        state.submitError = "Não foi possível enviar agora.";
+      }
+      save();
+    }
+
+    function goBack() {
+      if (state.done) {
+        state.done = false;
+        render();
+        return;
+      }
+      if (state.history.length <= 1) return;
+      state.history.pop();
+      render();
+    }
+
+    function renderThanks() {
+      const a = state.answers;
+      const statusNote = state.submitted
+        ? "Suas respostas foram registradas."
+        : (state.submitError
+          ? "Recebemos suas respostas nesta tela, mas o envio para a DashiTecnology ainda não confirmou. Se puder, finalize de novo em outro momento."
+          : "Estamos registrando suas respostas…");
+
+      app.innerHTML = `
+        <div class="progress-wrap">
+          <div class="bar"><span style="width:100%"></span></div>
+        </div>
+        <div class="q-card swap thanks">
+          <div class="kicker">DashiTecnology · Encerrado</div>
+          <h1>Obrigado${a.nome ? ", " + escapeHtml(a.nome) : ""}.</h1>
+          <p class="lede">${escapeHtml(statusNote)} A DashiTecnology usa este diagnóstico para entender o cenário de jornada da operação — você não precisa fazer mais nada agora.</p>
+          <div class="actions">
+            <button class="ghost" type="button" id="backEnd">Revisar última pergunta</button>
+            <button class="primary" type="button" id="resetBtn">Começar de novo</button>
+          </div>
+        </div>
+      `;
+      document.getElementById("backEnd").addEventListener("click", goBack);
+      document.getElementById("resetBtn").addEventListener("click", () => {
+        state.answers = {};
+        state.history = ["who"];
+        state.done = false;
+        state.submitted = false;
+        state.submitError = null;
+        delete state.finishedAt;
+        delete state.welcomeSeen;
+        render();
+        openWelcome();
+      });
+    }
+
+    function el(tag, attrs, text) {
+      const n = document.createElement(tag);
+      Object.entries(attrs || {}).forEach(([k, v]) => n.setAttribute(k === "class" ? "class" : k, v));
+      if (text) n.textContent = text;
+      return n;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    if (!state.history.length) state.history = ["who"];
+
+    const welcomeModal = document.getElementById("welcomeModal");
+    const welcomeStart = document.getElementById("welcomeStart");
+
+    function hasStarted() {
+      return state.done
+        || Boolean(state.answers.nome || state.answers.empresa || state.answers.cargo)
+        || (state.history.length > 1)
+        || Object.keys(state.answers).some((k) => !["empresa", "nome", "cargo"].includes(k) && state.answers[k]);
+    }
+
+    function openWelcome() {
+      welcomeModal.hidden = false;
+      document.body.style.overflow = "hidden";
+      welcomeStart.focus();
+    }
+
+    function closeWelcome() {
+      welcomeModal.hidden = true;
+      document.body.style.overflow = "";
+      state.welcomeSeen = true;
+      save();
+      const first = document.querySelector("#qcard .field");
+      first?.focus();
+    }
+
+    welcomeStart.addEventListener("click", closeWelcome);
+    welcomeModal.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeWelcome();
+    });
+
+    render();
+    if (!hasStarted() && !state.welcomeSeen) openWelcome();
+  </script>
+</body>
+</html>

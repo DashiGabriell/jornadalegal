@@ -1,0 +1,169 @@
+{
+  "name": "JornadaLegal — Diagnóstico Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "diagnostico-jornada",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "wh-diagnostico-jornada",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "webhookId": "diagnostico-jornada"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const root = $input.first().json || {};\nconst body = root.body && typeof root.body === 'object' ? root.body : root;\nconst headers = root.headers || {};\n\nconst empresa = String(body.empresa || '').trim();\nconst nome = String(body.nome || '').trim();\nconst cargo = String(body.cargo || '').trim();\n\nif (!empresa || !nome || !cargo) {\n  return [{\n    json: {\n      ok: false,\n      status: 400,\n      message: 'Informe empresa, nome e cargo.',\n      row: null,\n    },\n  }];\n}\n\nconst respostas = body.respostas && typeof body.respostas === 'object'\n  ? body.respostas\n  : {\n      empresa,\n      nome,\n      cargo,\n      controle: body.controle || null,\n      auditor: body.auditor || null,\n      cruzamento: body.cruzamento || null,\n      divergencia: body.divergencia || null,\n      banco: body.banco || null,\n      cct_quem: body.cct_quem || null,\n      reclamacao: body.reclamacao || null,\n      maior_dor: body.maior_dor || null,\n    };\n\nconst finishedAt = body.finished_at || new Date().toISOString();\nconst userAgent = String(\n  body.user_agent || headers['user-agent'] || headers['User-Agent'] || ''\n).slice(0, 500);\n\nreturn [{\n  json: {\n    ok: true,\n    status: 200,\n    message: 'ok',\n    row: {\n      empresa,\n      nome,\n      cargo,\n      controle: body.controle || null,\n      auditor: body.auditor || null,\n      cruzamento: body.cruzamento || null,\n      divergencia: body.divergencia || null,\n      banco: body.banco || null,\n      cct_quem: body.cct_quem || null,\n      reclamacao: body.reclamacao || null,\n      maior_dor: body.maior_dor || null,\n      respostas,\n      finished_at: finishedAt,\n      user_agent: userAgent || null,\n      origem: body.origem || 'diagnostico-jornada',\n    },\n  },\n}];"
+      },
+      "id": "code-normalizar",
+      "name": "Normalizar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ok-true",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-valido",
+      "name": "Payload válido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [500, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gdcaxslhskxzcrbejxxo.supabase.co/rest/v1/diagnostico_jornada",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.row) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 20000
+        }
+      },
+      "id": "http-salvar",
+      "name": "Salvar no Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, -80],
+      "credentials": {
+        "supabaseApi": {
+          "id": "1LYVmnzMNkwefvWR",
+          "name": "MrJoshua Supabase"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const saved = $input.first().json;\nconst rows = Array.isArray(saved) ? saved : (saved && saved.id ? [saved] : (saved && saved.body ? (Array.isArray(saved.body) ? saved.body : [saved.body]) : []));\nconst row = rows.find((r) => r && r.id) || null;\nif (!row) {\n  const detail = typeof saved === 'object' ? JSON.stringify(saved).slice(0, 400) : String(saved);\n  return [{\n    json: {\n      ok: false,\n      status: 502,\n      message: 'Não foi possível salvar no banco.',\n      detail,\n    },\n  }];\n}\nreturn [{\n  json: {\n    ok: true,\n    status: 201,\n    message: 'Respostas salvas.',\n    id: row.id,\n    created_at: row.created_at || null,\n  },\n}];"
+      },
+      "id": "code-resultado",
+      "name": "Resultado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, -80]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: $json.ok, message: $json.message, id: $json.id || null }) }}",
+        "options": {
+          "responseCode": "={{ $json.status || 200 }}"
+        }
+      },
+      "id": "respond-ok",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [1240, -80]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, message: $json.message || 'Payload inválido.' }) }}",
+        "options": {
+          "responseCode": "={{ $json.status || 400 }}"
+        }
+      },
+      "id": "respond-erro",
+      "name": "Responder erro",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [760, 120]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Normalizar", "type": "main", "index": 0 }]]
+    },
+    "Normalizar": {
+      "main": [[{ "node": "Payload válido?", "type": "main", "index": 0 }]]
+    },
+    "Payload válido?": {
+      "main": [
+        [{ "node": "Salvar no Supabase", "type": "main", "index": 0 }],
+        [{ "node": "Responder erro", "type": "main", "index": 0 }]
+      ]
+    },
+    "Salvar no Supabase": {
+      "main": [[{ "node": "Resultado", "type": "main", "index": 0 }]]
+    },
+    "Resultado": {
+      "main": [[{ "node": "Responder", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
